@@ -60,7 +60,7 @@ function randomMovement() {
 // Random move every 4-8 seconds
 bot.on('spawn', () => {
   setInterval(randomMovement, 4000 + Math.random() * 4000);
-  bot.chat('Hello! itssteve is online to keep the server alive.');
+  bot.chat('!ai hello how are you im fine i hope you ai is good');
 });
 
 bot.on('error', err => console.error('Bot error:', err));
