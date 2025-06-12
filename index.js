@@ -1,70 +1,71 @@
-require('dotenv').config();
 const mineflayer = require('mineflayer');
-const express = require('express');
+const http = require('http');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+// === CONFIGURATION ===
+const BOT_USERNAME = process.env.BOT_USERNAME || "AternosBot" + Math.floor(Math.random() * 1000); // Any name, change as you wish
+const SERVER_IP = process.env.SERVER_IP || "Nerddddsmp.aternos.me";
+const SERVER_PORT = parseInt(process.env.SERVER_PORT) || 25565;
 
-// Web endpoint for UptimeRobot/Render
-app.get('/', (_req, res) => {
-  res.send('Aternos Bot is running!');
-});
-app.listen(PORT, () => {
-  console.log(`Web server running on port ${PORT}`);
-});
+// === BOT LOGIC ===
+function createBot() {
+  const bot = mineflayer.createBot({
+    host: SERVER_IP,
+    port: SERVER_PORT,
+    username: BOT_USERNAME,
+    version: false // auto-detect
+  });
 
-// Bot config
-const bot = mineflayer.createBot({
-  host: process.env.SERVER_HOST, // e.g., Nerddddsmp.aternos.me
-  port: parseInt(process.env.SERVER_PORT) || 25565,
-  username: process.env.MC_EMAIL, // e.g., itssteve
-  auth: process.env.AUTH || 'offline', // 'offline' for cracked servers
-  version: process.env.MC_VERSION || false // auto
-});
-
-// Movement logic
-function randomMovement() {
-  const actions = ['forward', 'back', 'left', 'right', 'jump', 'sneak', 'stop'];
-  const action = actions[Math.floor(Math.random() * actions.length)];
-
-  // Reset movement
-  bot.setControlState('forward', false);
-  bot.setControlState('back', false);
-  bot.setControlState('left', false);
-  bot.setControlState('right', false);
-  bot.setControlState('jump', false);
-  bot.setControlState('sneak', false);
-
-  switch (action) {
-    case 'forward':
-    case 'back':
-    case 'left':
-    case 'right':
-      bot.setControlState(action, true);
-      break;
-    case 'jump':
-      bot.setControlState('jump', true);
-      setTimeout(() => bot.setControlState('jump', false), 500);
-      break;
-    case 'sneak':
-      bot.setControlState('sneak', true);
-      setTimeout(() => bot.setControlState('sneak', false), 2000);
-      break;
-    case 'stop':
-    default:
-      // all movement reset above
-      break;
+  function randomMove() {
+    if (!bot.entity || !bot.entity.position) return;
+    const actions = [
+      () => bot.setControlState('forward', true),
+      () => bot.setControlState('back', true),
+      () => bot.setControlState('left', true),
+      () => bot.setControlState('right', true),
+      () => bot.setControlState('jump', true),
+      () => bot.setControlState('sneak', true),
+      () => bot.setControlState('sprint', true),
+      () => bot.setControlState('jump', false),
+      () => bot.setControlState('sneak', false),
+      () => bot.setControlState('forward', false),
+      () => bot.setControlState('back', false),
+      () => bot.setControlState('left', false),
+      () => bot.setControlState('right', false),
+      () => bot.setControlState('sprint', false),
+    ];
+    const action = actions[Math.floor(Math.random() * actions.length)];
+    action();
+    setTimeout(randomMove, 5000 + Math.random() * 5000);
   }
+
+  bot.on('spawn', () => {
+    console.log('Bot spawned! Starting random movement.');
+    randomMove();
+  });
+
+  bot.on('end', () => {
+    console.log('Bot disconnected, reconnecting in 10 seconds...');
+    setTimeout(createBot, 10000);
+  });
+
+  bot.on('error', err => {
+    console.log('Bot error:', err.message, 'Reconnecting in 15 seconds...');
+    setTimeout(createBot, 15000);
+  });
+
+  bot.on('kicked', (reason) => {
+    console.log('Bot was kicked:', reason);
+  });
 }
 
-// Random move every 4-8 seconds
-bot.on('spawn', () => {
-  setInterval(randomMovement, 4000 + Math.random() * 4000);
-  bot.chat('!ai hello how are you im fine i hope you ai is good');
-});
+// Start the bot
+createBot();
 
-bot.on('error', err => console.error('Bot error:', err));
-bot.on('end', () => {
-  console.log('Bot disconnected, retrying in 10s...');
-  setTimeout(() => bot.connect(), 10000);
+// UptimeRobot Web Server
+const PORT = process.env.PORT || 8080;
+http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('Bot is running!');
+}).listen(PORT, () => {
+  console.log(`HTTP server for UptimeRobot started on port ${PORT}`);
 });
