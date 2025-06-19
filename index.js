@@ -2,9 +2,9 @@ const mineflayer = require('mineflayer');
 const http = require('http');
 
 // === CONFIGURATION ===
-const BOT_USERNAME = process.env.BOT_USERNAME || "AternosBot" + Math.floor(Math.random() * 1000); // Any name, change as you wish
-const SERVER_IP = process.env.SERVER_IP || "Nerddddsmp.aternos.me";
-const SERVER_PORT = parseInt(process.env.SERVER_PORT) || 25565;
+const BOT_USERNAME = process.env.BOT_USERNAME || "itssteve" 
+const SERVER_IP = process.env.SERVER_IP || "anothernerd.aternos.me";
+const SERVER_PORT = parseInt(process.env.SERVER_PORT) || 62484;
 
 // === BOT LOGIC ===
 function createBot() {
